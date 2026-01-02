@@ -1,6 +1,15 @@
 use rand::Rng;
 use std::io;
-use std::sync::atomic::fence;
+
+fn pull_card(mut score : i32, mut deck : Vec<i32> ) {
+
+    println!("You're taking the card...");
+    let random_pick = rand::random_range(0..(deck.len())-1);
+    score += deck[random_pick];
+    deck.remove(random_pick);
+    println!("You took card with score {card}, you score is {score}", card=deck[random_pick]);
+
+}
 fn game() {
 
     println!("Game starts...");
@@ -113,7 +122,6 @@ fn game() {
                 println!("You took a card with score: {card}", card = deck[random_pick]);
                 player_score += deck[random_pick];
                 deck.remove(random_pick);
-
 
                 turns += 1;
                 break;
