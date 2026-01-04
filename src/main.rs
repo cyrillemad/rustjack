@@ -1,176 +1,165 @@
 use rand::Rng;
 use std::io;
 
-fn pull_card(mut score : i32, mut deck : Vec<i32> ) {
-
-    println!("You're taking the card...");
-    let random_pick = rand::random_range(0..(deck.len())-1);
-    score += deck[random_pick];
-    deck.remove(random_pick);
-    println!("You took card with score {card}, you score is {score}", card=deck[random_pick]);
-
+struct Card {
+    suit: String,
+    value: String,
+    score: u32,
 }
-fn game() {
+fn value_as_score(value: &str) -> u32 {
+    if value == "Ace" {
+        1
+    } else if value == "King" || value == "Queen" || value == "Jack" {
+        10
+    } else {
+        value.parse::<u32>().unwrap()
+    }
+}
 
-    println!("Game starts...");
+fn get_card(suit: &str, value: &str) -> Card {
+    Card {
+        suit: suit.to_string(),
+        value: value.to_string(),
+        score: value_as_score(value),
+    }
+}
+fn get_deck() -> Vec<Card> {
+    let suits = ["Hearts", "Spades", "Diamonds", "Clubs"];
+    let values = ["Ace", "King", "Queen", "Jack"];
+    let mut deck: Vec<Card> = Vec::new();
 
-    let mut deck = vec![1, 1, 1, 1,
-                        2, 2, 2, 2,
-                        3, 3, 3, 3,
-                        4, 4, 4, 4,
-                        5, 5, 5 ,5,
-                        6, 6, 6, 6,
-                        7, 7, 7, 7,
-                        8, 8, 8, 8,
-                        9, 9, 9, 9,
-                        10, 10, 10, 10,
-                        10, 10, 10, 10,
-                        10, 10, 10, 10,
-                        10, 10, 10, 10];
-
-    let mut dealer_score = 0;
-    let mut player_score = 0;
-    let mut dealer_last_pick = 0;
-    let mut turns = 0;
-
-    println!("Dealer is taking 2 cards...");
-
-    let mut random_pick = rand::random_range(0..(deck.len())-1);
-
-    dealer_score += deck[random_pick];
-    deck.remove(random_pick);
-
-    random_pick = rand::random_range(0..(deck.len())-1);
-
-    dealer_last_pick = deck[random_pick];
-    dealer_score += deck[random_pick];
-    deck.remove(random_pick);
-
-    println!("Dealer's score is {dealer_score}, his last card is {dealer_last_pick}");
-
-    println!("You are taking 2 cards...");
-    random_pick = rand::random_range(0..(deck.len())-1);
-    println!("You taked a card with score: {card}", card = deck[random_pick]);
-    player_score += deck[random_pick];
-    deck.remove(random_pick);
-
-    random_pick = rand::random_range(0..(deck.len())-1);
-    println!("You taked a card with score: {card}", card = deck[random_pick]);
-    player_score += deck[random_pick];
-    deck.remove(random_pick);
-
-
-    loop {
-        let deck_cards = deck.len();
-
-        if player_score > 21{
-
-            println!("You score is more than 21 cards. You lost, dealer wins");
-            break;
-
-        } else if dealer_score > 21 {
-
-            println!("Dealer's score is more than 21 cards. You won!");
-            break;
-
-        } else if player_score == 21 {
-
-            println!("It's blackjack. You won!");
-            break;
-
-        } else if dealer_score == 21 {
-
-            println!("It's dealer's blackjack. You lost.");
-            break;
-
-        } else if dealer_score >= 17 && turns != 0 {
-
-            if dealer_score > player_score {
-
-                println!("You lost, dealer wins.");
-                break;
-
-            } else if dealer_score < player_score {
-
-                println!("You won!");
-                break;
-
-            } else {
-
-                println!("Nobody wins.");
-                break;
-            }
-
+    for suit in &suits {
+        for value in &values {
+            deck.push(get_card(suit, value));
         }
 
-        loop {
-
-            println!("Turn {turn}", turn = turns + 1);
-            println!("Count of cards in deck: {deck_cards}");
-            println!("Your score {player_score}, dealer score {dealer_score}, his last card is {dealer_last_pick}");
-            println!("Select your action: H - Hit, S - Stand");
-
-            let mut player_pick = String::new();
-            io::stdin()
-                .read_line(&mut player_pick)
-                .expect("Failed to read line");
-
-            if player_pick.trim() == "H" {
-
-                println!("You are taking the card...");
-                random_pick = rand::random_range(0..deck_cards-1);
-                println!("You took a card with score: {card}", card = deck[random_pick]);
-                player_score += deck[random_pick];
-                deck.remove(random_pick);
-
-                turns += 1;
-                break;
-
-            } else if player_pick.trim() == "S" {
-
-                println!("You standing, it's dealer turn.");
-
-                loop {
-                    if dealer_score >= 17 {
-
-                        println!("Dealer's turn is over.");
-                        break;
-
-                    } else {
-
-                        random_pick = rand::random_range(0..(deck.len())-1);
-                        dealer_score += deck[random_pick];
-                        deck.remove(random_pick);
-                        println!("Dealer took the card, it`s {card}.", card = deck[random_pick]);
-                        println!("Dealer's score: {dealer_score}.");
-
-                    }
-
-                    turns += 1;
-
-                }
-
-                if dealer_score >= 17 {
-
-                    break;
-                }
-
-
-            } else {
-
-                println!("Action is not defined");
-
-            }
-
-
+        for value in (2..11) {
+            deck.push(get_card(suit, value.to_string().as_str()));
         }
+    }
+
+    deck
+}
+
+fn rule_check(player: u32, dealer: u32) -> bool {
+    if player > 21 {
+        println!("You lose, dealer wins.");
+        return true;
+    } else if player == 21 {
+        println!("Blackjack!");
+        return true;
+    } else if dealer > 21 {
+        println!("You win, dealer lose.");
+    }
+
+
+    false
+}
+
+fn stand_rule_check(player: u32, dealer: u32) -> bool {
+
+    if dealer == 21 {
+
+        println!("Dealer's blackjack!");
+        return true;
+
+    } else if player > dealer {
+
+        println!("You win!");
+        return true;
+
+    } else if player < dealer {
+
+        println!("You lose, dealer wins.");
+        return true;
+
+    } else if player == dealer {
+
+        println!("You lose, nobody wins.");
+        return true;
 
     }
 
+    false
+}
+
+fn player_select() -> String {
+    let mut select = String::new();
+    io::stdin().read_line(&mut select).unwrap().to_string();
+
+    select.to_lowercase().trim().to_string()
+}
+fn pull_card(deck: &mut Vec<Card>, mut score: u32) -> u32 {
+    let random_pick = rand::random_range(0..deck.len());
+    score += deck[random_pick].score;
+    println!(
+        "Card pulled: {suit}, {value}.",
+        suit = deck[random_pick].suit,
+        value = deck[random_pick].value
+    );
+    deck.remove(random_pick);
+
+    score
+}
+fn game() {
+    clean_window();
+
+    let mut deck = get_deck();
+    let mut player_score: u32 = 0;
+    let mut dealer_score: u32 = 0;
+
+    println!("Game starts.");
+    println!("Dealer is taking 2 cards...");
+    dealer_score = pull_card(&mut deck, dealer_score);
+    dealer_score = pull_card(&mut deck, dealer_score);
+    println!("Yoy're taking 2 cards...");
+    player_score = pull_card(&mut deck, player_score);
+    player_score = pull_card(&mut deck, player_score);
+
+    println!(" ");
+    println!("Your score: {player_score}, dealer's: {dealer_score}");
+
+    loop {
+        if rule_check(player_score, dealer_score) {
+            break;
+        }
+
+        println!("Select your action: H - hit, S - stand");
+        let action = player_select();
+
+        if action == "h" {
+            clean_window();
+            println!("You're pulling card...");
+            player_score = pull_card(&mut deck, player_score);
+            println!("Now you score is: {player_score}, dealer's: {dealer_score}");
+        } else if action == "s" {
+            clean_window();
+            println!("You're standing...");
+            println!("Dealer is taking cards...");
+            while dealer_score < 17 {
+                dealer_score = pull_card(&mut deck, dealer_score);
+            }
+            println!("Dealer's score is: {dealer_score}");
+
+            if stand_rule_check(player_score, dealer_score) {
+                break;
+            }
+        }
+    }
+}
+
+fn clean_window() {
+    println!("\x1B[2J\x1B[1;1H");
+}
+fn pause() {
+    println!("Type anything to continue...");
+    let mut pause_in = String::new();
+    io::stdin()
+        .read_line(&mut pause_in)
+        .expect("Failed to read line");
 }
 
 fn main() {
-
-        game();
-    loop { } // will be fixed
+    game();
+    pause();
 }
